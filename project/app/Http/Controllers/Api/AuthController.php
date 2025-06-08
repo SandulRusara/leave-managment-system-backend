@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    /**
-     * Register a new user
-     */
+
     public function register(RegisterRequest $request): JsonResponse
     {
         try {
@@ -25,7 +23,7 @@ class AuthController extends Controller
                 'department' => $request->department,
                 'employee_id' => $request->employee_id,
                 'joining_date' => $request->joining_date,
-                'role' => 'employee', // Default role
+                'role' => 'employee',
             ]);
 
             $token = $user->createToken('LeaveManagementApp')->accessToken;
@@ -56,9 +54,7 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Login user
-     */
+
     public function login(LoginRequest $request): JsonResponse
     {
         try {
@@ -100,9 +96,7 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Get authenticated user
-     */
+
     public function user(): JsonResponse
     {
         try {
@@ -133,9 +127,7 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Logout user
-     */
+
     public function logout(): JsonResponse
     {
         try {

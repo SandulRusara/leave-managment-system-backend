@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of users (Admin only)
-     */
+
     public function index(Request $request): JsonResponse
     {
         try {
@@ -27,12 +25,12 @@ class UserController extends Controller
 
             $query = User::query();
 
-            // Filter by role if provided
+
             if ($request->has('role') && in_array($request->role, ['admin', 'employee'])) {
                 $query->where('role', $request->role);
             }
 
-            // Search by name or email
+
             if ($request->has('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
@@ -66,15 +64,13 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Display the specified user with their leave statistics
-     */
+
     public function show(User $user): JsonResponse
     {
         try {
             $authUser = Auth::user();
 
-            // Employees can only view their own profile
+
             if ($authUser->isEmployee() && $authUser->id !== $user->id) {
                 return response()->json([
                     'success' => false,
@@ -82,7 +78,7 @@ class UserController extends Controller
                 ], 403);
             }
 
-            // Get user's leave statistics
+
             $leaveStats = [
                 'total_leaves' => $user->leaves()->count(),
                 'pending_leaves' => $user->leaves()->pending()->count(),
@@ -90,7 +86,7 @@ class UserController extends Controller
                 'rejected_leaves' => $user->leaves()->rejected()->count(),
             ];
 
-            // Get recent leaves
+
             $recentLeaves = $user->leaves()
                 ->orderBy('created_at', 'desc')
                 ->limit(5)

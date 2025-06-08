@@ -14,31 +14,29 @@ use Carbon\Carbon;
 
 class LeaveController extends Controller
 {
-    /**
-     * Display a listing of leaves
-     */
+
     public function index(Request $request): JsonResponse
     {
         try {
             $user = Auth::user();
             $query = Leave::with(['user', 'approvedBy']);
 
-            // If employee, show only their leaves
+
             if ($user->isEmployee()) {
                 $query->where('user_id', $user->id);
             }
 
-            // Filter by status if provided
+
             if ($request->has('status') && in_array($request->status, ['pending', 'approved', 'rejected'])) {
                 $query->where('status', $request->status);
             }
 
-            // Filter by user if admin and user_id provided
+
             if ($user->isAdmin() && $request->has('user_id')) {
                 $query->where('user_id', $request->user_id);
             }
 
-            // Sort by latest first
+
             $leaves = $query->orderBy('created_at', 'desc')->paginate(10);
 
             return response()->json([
@@ -63,15 +61,13 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Store a newly created leave request
-     */
+
     public function store(LeaveRequest $request): JsonResponse
     {
         try {
             $user = Auth::user();
 
-            // Calculate total days
+
             $startDate = Carbon::parse($request->start_date);
             $endDate = Carbon::parse($request->end_date);
             $totalDays = $startDate->diffInDays($endDate) + 1;
@@ -103,15 +99,13 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Display the specified leave
-     */
+
     public function show(Leave $leave): JsonResponse
     {
         try {
             $user = Auth::user();
 
-            // Check if user can view this leave
+
             if ($user->isEmployee() && $leave->user_id !== $user->id) {
                 return response()->json([
                     'success' => false,
@@ -135,15 +129,12 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Update the specified leave status (Admin only)
-     */
     public function update(UpdateLeaveStatusRequest $request, Leave $leave): JsonResponse
     {
         try {
             $user = Auth::user();
 
-            // Check if leave is still pending
+
             if (!$leave->isPending()) {
                 return response()->json([
                     'success' => false,
@@ -177,15 +168,13 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Remove the specified leave (Employee can only delete pending leaves)
-     */
+
     public function destroy(Leave $leave): JsonResponse
     {
         try {
             $user = Auth::user();
 
-            // Check if user can delete this leave
+
             if ($user->isEmployee() && ($leave->user_id !== $user->id || !$leave->isPending())) {
                 return response()->json([
                     'success' => false,
@@ -209,9 +198,7 @@ class LeaveController extends Controller
         }
     }
 
-    /**
-     * Get leave statistics (Admin only)
-     */
+
     public function statistics(): JsonResponse
     {
         try {
@@ -230,20 +217,20 @@ class LeaveController extends Controller
             $rejectedLeaves = Leave::rejected()->count();
             $totalEmployees = User::where('role', 'employee')->count();
 
-            // Get monthly leave statistics for current year
+
             $monthlyStats = Leave::selectRaw('MONTH(created_at) as month, COUNT(*) as count')
                 ->whereYear('created_at', date('Y'))
                 ->groupBy('month')
                 ->pluck('count', 'month')
                 ->toArray();
 
-            // Fill missing months with 0
+
             $monthlyLeaves = [];
             for ($i = 1; $i <= 12; $i++) {
                 $monthlyLeaves[] = $monthlyStats[$i] ?? 0;
             }
 
-            // Get leave type statistics
+
             $leaveTypeStats = Leave::selectRaw('leave_type, COUNT(*) as count')
                 ->groupBy('leave_type')
                 ->pluck('count', 'leave_type')
